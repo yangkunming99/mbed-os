@@ -305,5 +305,4 @@ const char *RTWInterface::get_gateway()
 
 NetworkStack *RTWInterface::get_stack()
 {
-    return nsapi_create_stack(&lwip_stack);
-}
+    return nsapi_create_stack(&lwip_stack);}

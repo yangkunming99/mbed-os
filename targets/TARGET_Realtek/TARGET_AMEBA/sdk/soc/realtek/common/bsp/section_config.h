@@ -131,9 +131,13 @@
 #define E_CUT_ROM_DATA_SECTION                         \
         SECTION(".cute.ram.data")
 
-//#define FWUROM_DATA_SECTION                    SECTION(".fwurom.data")
+/*
+#define FWUROM_DATA_SECTION                    \
+        SECTION(".fwurom.data")
     
-//#define FWUROM_RODATA_SECTION                  SECTION(".fwurom.rodata")
+#define FWUROM_RODATA_SECTION                    \
+        SECTION(".fwurom.rodata")
+*/
  
 #define FWUROM_TEXT_SECTION                    \
         SECTION(".fwurom.text")

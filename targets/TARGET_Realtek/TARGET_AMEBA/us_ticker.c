@@ -75,30 +75,45 @@ void us_ticker_init(void)
 uint32_t us_ticker_read(void)
 {
     uint32_t tick_cnt;
+    uint32_t ticks_125ms;
+    uint32_t ticks_remain;
+    uint64_t us_tick;
 
     if (!us_ticker_inited) {
         us_ticker_init();
     }
 
     tick_cnt = HalTimerOp.HalTimerReadCount(SYS_TIM_ID);
-    return (uint32_t)TICK_TO_US(0xFFFFFFFFUL - tick_cnt);
+    tick_cnt = 0xffffffff - tick_cnt;   // it's a down counter
+    ticks_125ms = tick_cnt/(GTIMER_CLK_HZ/8);
+    ticks_remain = tick_cnt - (ticks_125ms*(GTIMER_CLK_HZ/8));
+    us_tick = ticks_125ms * 125000;
+    us_tick += (ticks_remain * 1000000)/GTIMER_CLK_HZ;
+    return ((uint32_t)us_tick);
 }
 
 void us_ticker_set_interrupt(timestamp_t timestamp)
 {
-    uint32_t time_cur;
+    uint32_t cur_time_us;
+    uint32_t time_def;
 
-    time_cur = us_ticker_read();
-    if (timestamp > time_cur + TIMER_TICK_US) {
-        TimerAdapter.TimerLoadValueUs = timestamp - time_cur;
-    } else {
-        TimerAdapter.TimerLoadValueUs = TIMER_TICK_US;
+    cur_time_us = us_ticker_read();
+    if ((uint32_t)timestamp >= cur_time_us) {
+        time_def = (uint32_t)timestamp - cur_time_us;
     }
+    else {
+        time_def = 0xffffffff - cur_time_us + (uint32_t)timestamp;
+    }    
 
-    HalTimerOp.HalTimerDis((u32)TimerAdapter.TimerId);
-    HalTimerOpExt.HalTimerReLoad((u32)TimerAdapter.TimerId, TimerAdapter.TimerLoadValueUs);
-    HalTimerOpExt.HalTimerSync(SYS_TIM_ID);
-    HalTimerOp.HalTimerEn((u32)TimerAdapter.TimerId);
+    if (time_def < TIMER_TICK_US) {
+        time_def = TIMER_TICK_US;       // at least 1 tick
+    }
+    HalTimerDeInit (&TimerAdapter);
+    TimerAdapter.IrqDis = 0;    // Enable Irq
+    TimerAdapter.TimerLoadValueUs = time_def;
+    TimerAdapter.TimerMode = USER_DEFINED; // Countdown Free Run
+
+    HalTimerOp.HalTimerInit((VOID*) &TimerAdapter);
 }
 
 void us_ticker_fire_interrupt(void)
@@ -107,7 +122,7 @@ void us_ticker_fire_interrupt(void)
 
     HalTimerOp.HalTimerDis((u32)TimerAdapter.TimerId);
     HalTimerOpExt.HalTimerReLoad((u32)TimerAdapter.TimerId, TimerAdapter.TimerLoadValueUs);
-    HalTimerOpExt.HalTimerSync(SYS_TIM_ID);
+    //HalTimerOpExt.HalTimerSync(SYS_TIM_ID);
     HalTimerOp.HalTimerEn((u32)TimerAdapter.TimerId);
 }
 
@@ -118,4 +133,5 @@ void us_ticker_disable_interrupt(void)
 
 void us_ticker_clear_interrupt(void)
 {
+    HalTimerOp.HalTimerIrqClear((u32)TimerAdapter.TimerId);
 }

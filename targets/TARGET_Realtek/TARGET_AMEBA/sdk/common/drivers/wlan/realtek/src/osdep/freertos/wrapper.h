@@ -26,11 +26,8 @@
 #include <string.h>
 #include "wireless.h"
 #include <skbuff.h>
-#ifdef PLATFORM_FREERTOS
-#include "freertos_service.h"
-#elif defined(PLATFORM_CMSIS_RTOS)
-#include "rtx_service.h"
-#endif
+#include "osdep_service.h"
+
 #ifndef __LIST_H
 #warning "DLIST_NOT_DEFINE!!!!!!"
 //----- ------------------------------------------------------------------
@@ -173,28 +170,20 @@ extern void restore_flags(void);
 #endif
 
 #if defined CONFIG_GSPI_HCI || defined CONFIG_SDIO_HCI || defined(CONFIG_LX_HCI)
-	#if defined(CONFIG_RTL8195A) || defined(CONFIG_RTL8711B)
-		#if defined(CONFIG_MP_INCLUDED)
-			#ifdef CONFIG_DONT_CARE_TP
-				#define MAX_RX_PKT_LIMIT		((WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_RX_ETHFRM_LEN + 511) / 512) // 4, for lxbus
-			#else
-				#define MAX_RX_PKT_LIMIT		((WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_ETHFRM_LEN + 511) / 512) // 4, for lxbus
-			#endif
-			#define MAX_RX_PKT_SIZE				MAX_RX_PKT_LIMIT*512	// MAX_SKB_BUF_SIZE = 0+32+40+512*4+0 = 2120
+	#if defined(CONFIG_MP_INCLUDED)
+		#ifdef CONFIG_DONT_CARE_TP
+			#define MAX_RX_PKT_LIMIT			((WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_RX_ETHFRM_LEN + 511) / 512) // 4, for lxbus
 		#else
-			#ifdef CONFIG_DONT_CARE_TP
-				#define MAX_RX_PKT_SIZE			WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_RX_ETHFRM_LEN
-			#else
-				#define MAX_RX_PKT_SIZE			WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_ETHFRM_LEN	// MAX_RX_PKT_SIZE = 64+1514 = 1578
-			#endif
-			#define MAX_RX_PKT_LIMIT			((MAX_RX_PKT_SIZE + 511) / 512)			// ((1578 + 512)  / 512) = 4
+			#define MAX_RX_PKT_LIMIT			((WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_ETHFRM_LEN + 511) / 512) // 4, for lxbus
 		#endif
-	#else
+		#define MAX_RX_PKT_SIZE					MAX_RX_PKT_LIMIT*512	// MAX_SKB_BUF_SIZE = 0+32+40+512*4+0 = 2120
+	#else	
 		#ifdef CONFIG_DONT_CARE_TP
 			#define MAX_RX_PKT_SIZE				WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_RX_ETHFRM_LEN
 		#else
-			#define MAX_RX_PKT_SIZE				WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_ETHFRM_LEN
+			#define MAX_RX_PKT_SIZE				WLAN_MAX_PROTOCOL_OVERHEAD + WLAN_MAX_ETHFRM_LEN	// MAX_RX_PKT_SIZE = 64+1514 = 1578
 		#endif
+		#define MAX_RX_PKT_LIMIT				((MAX_RX_PKT_SIZE + 511) / 512)			// ((1578 + 512)  / 512) = 4
 	#endif
 	
 	#ifdef CONFIG_DONT_CARE_TP

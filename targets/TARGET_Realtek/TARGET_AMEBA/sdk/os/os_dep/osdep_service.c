@@ -70,8 +70,10 @@ u32 rtw_atoi(u8* s)
 
 	return(num); 
 }
+#if CONFIG_USE_TCM_HEAP
 void *tcm_heap_malloc(int size);
 void *tcm_heap_calloc(int size);
+#endif
 u8* _rtw_vmalloc(u32 sz)
 {
 	u8 *pbuf = NULL;	
@@ -1157,6 +1159,83 @@ u32  rtw_timerChangePeriod( _timerHandle xTimer,
 
 	return 0;	
 }
+
+void *rtw_timerGetID( _timerHandle xTimer )
+{
+	if(osdep_service.rtw_timerGetID)
+		return osdep_service.rtw_timerGetID(xTimer);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerGetID");
+
+	return NULL;		
+}
+
+u32  rtw_timerStart( _timerHandle xTimer, osdepTickType xBlockTime )
+{
+	if(osdep_service.rtw_timerStart)
+		return osdep_service.rtw_timerStart(xTimer, xBlockTime);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerStart");
+
+	return 0;	
+}
+
+u32  rtw_timerStartFromISR( _timerHandle xTimer, 
+								osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+	if(osdep_service.rtw_timerStartFromISR)
+		return osdep_service.rtw_timerStartFromISR(xTimer, pxHigherPriorityTaskWoken);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerStartFromISR");
+
+	return 0;	
+}
+
+u32  rtw_timerStopFromISR( _timerHandle xTimer, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+	if(osdep_service.rtw_timerStopFromISR)
+		return osdep_service.rtw_timerStopFromISR(xTimer, pxHigherPriorityTaskWoken);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerStopFromISR");
+
+	return 0;	
+}
+
+u32  rtw_timerResetFromISR( _timerHandle xTimer, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+	if(osdep_service.rtw_timerResetFromISR)
+		return osdep_service.rtw_timerResetFromISR(xTimer, pxHigherPriorityTaskWoken);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerResetFromISR");
+
+	return 0;	
+}
+
+u32  rtw_timerChangePeriodFromISR( _timerHandle xTimer, 
+							   osdepTickType xNewPeriod, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+	if(osdep_service.rtw_timerChangePeriodFromISR)
+		return osdep_service.rtw_timerChangePeriodFromISR(xTimer, xNewPeriod, pxHigherPriorityTaskWoken);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerChangePeriodFromISR");
+
+	return 0;	
+}
+
+u32  rtw_timerReset( _timerHandle xTimer, 
+						osdepTickType xBlockTime )
+{
+	if(osdep_service.rtw_timerReset)
+		return osdep_service.rtw_timerReset(xTimer, xBlockTime);
+	else
+		OSDEP_DBG("Not implement osdep service: rtw_timerReset");
+
+	return 0;	
+}
+
 
 #if 0 //TODO
 void rtw_init_delayed_work(struct delayed_work *dwork, work_func_t func, const char *name)
