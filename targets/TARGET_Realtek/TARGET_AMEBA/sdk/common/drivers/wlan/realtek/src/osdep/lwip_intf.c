@@ -19,24 +19,18 @@
 #include <autoconf.h>
 #include <lwip_intf.h>
 #include <lwip/netif.h>
-#if !DEVICE_EMAC
+#if !defined(CONFIG_MBED_ENABLED)
 #include <lwip_netconf.h>
 #include <ethernetif.h>
 #endif
 #include <osdep_service.h>
 #include <wifi/wifi_util.h>
-
 //----- ------------------------------------------------------------------
 // External Reference
 //----- ------------------------------------------------------------------
 #if (CONFIG_LWIP_LAYER == 1)
-#if DEVICE_EMAC
-	extern struct netif *xnetif[];
-#else
 	extern struct netif xnetif[];			//LWIP netif
 #endif
-#endif
-
 
 /**
  *      rltk_wlan_set_netif_info - set netif hw address and register dev pointer to netif device
@@ -51,7 +45,7 @@
 void rltk_wlan_set_netif_info(int idx_wlan, void * dev, unsigned char * dev_addr)
 {
 #if (CONFIG_LWIP_LAYER == 1)
-#if DEVICE_EMAC
+#if defined(CONFIG_MBED_ENABLED)
 	//rtw_memcpy(xnetif[idx_wlan]->hwaddr, dev_addr, 6);
 	//set netif hwaddr later
 #else
@@ -130,15 +124,10 @@ void rltk_wlan_recv(int idx, struct eth_drv_sg *sg_list, int sg_len)
     struct sk_buff *skb;
 
 	DBG_TRACE("%s is called", __FUNCTION__);
-	
-    if (!rltk_wlan_check_isup(idx))
-        return;
-	
 	if(idx == -1){
 		DBG_ERR("skb is NULL");
 		return;
 	}
-	
     skb = rltk_wlan_get_recv_skb(idx);
 	DBG_ASSERT(skb, "No pending rx skb");
 
@@ -154,7 +143,7 @@ void rltk_wlan_recv(int idx, struct eth_drv_sg *sg_list, int sg_len)
 int netif_is_valid_IP(int idx, unsigned char *ip_dest)
 {
 #if CONFIG_LWIP_LAYER == 1
-#if DEVICE_EMAC
+#if defined(CONFIG_MBED_ENABLED)
     return 1;
 #else
     struct netif *pnetif = &xnetif[idx];
@@ -168,10 +157,21 @@ int netif_is_valid_IP(int idx, unsigned char *ip_dest)
 #else
     u32_t *ip_dest_addr  = (u32_t*)ip_dest;
 #endif
+
+#if LWIP_VERSION_MAJOR >= 2
+	ip_addr_set_ip4_u32(&addr, *ip_dest_addr);
+#else
     addr.addr = *ip_dest_addr;
+#endif
+	
+#if LWIP_VERSION_MAJOR >= 2
+	if((ip_addr_get_ip4_u32(netif_ip_addr4(pnetif))) == 0)
+		return 1;
+#else
     
 	if(pnetif->ip_addr.addr == 0)
         return 1;
+#endif
 	
     if(ip_addr_ismulticast(&addr) || ip_addr_isbroadcast(&addr,pnetif)){
 		return 1;
@@ -194,12 +194,10 @@ int netif_is_valid_IP(int idx, unsigned char *ip_dest)
 #endif
 }
 
-#if DEVICE_EMAC
-
-#else
+#if !defined(CONFIG_MBED_ENABLED)
 int netif_get_idx(struct netif *pnetif)
 {
-#if (CONFIG_LWIP_LAYER == 1)
+#if CONFIG_LWIP_LAYER == 1
 	int idx = pnetif - xnetif;
 
 	switch(idx) {
@@ -228,7 +226,7 @@ unsigned char *netif_get_hwaddr(int idx_wlan)
 void netif_rx(int idx, unsigned int len)
 {
 #if (CONFIG_LWIP_LAYER == 1)
-#if DEVICE_EMAC
+#if defined(CONFIG_MBED_ENABLED)
     wlan_emac_recv(NULL, len);
 #else
     ethernetif_recv(&xnetif[idx], len);
@@ -242,7 +240,7 @@ void netif_rx(int idx, unsigned int len)
 void netif_post_sleep_processing(void)
 {
 #if (CONFIG_LWIP_LAYER == 1)
-#if DEVICE_EMAC
+#if defined(CONFIG_MBED_ENABLED)
 #else
 	lwip_POST_SLEEP_PROCESSING();	//For FreeRTOS tickless to enable Lwip ARP timer when leaving IPS - Alex Fang
 #endif
@@ -252,7 +250,7 @@ void netif_post_sleep_processing(void)
 void netif_pre_sleep_processing(void)
 {
 #if (CONFIG_LWIP_LAYER == 1)
-#if DEVICE_EMAC
+#if defined(CONFIG_MBED_ENABLED)
 #else
 	lwip_PRE_SLEEP_PROCESSING();
 #endif

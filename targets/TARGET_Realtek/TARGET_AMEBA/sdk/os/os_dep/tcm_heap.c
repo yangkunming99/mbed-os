@@ -27,9 +27,9 @@ HEAP_DEFINE_BUF(tcm_heap, TCM_HEAP_SIZE);
 
 static int g_heap_inited=0;
 static	_lock	tcm_lock;
-#ifdef PLATFORM_FREERTOS
+#if defined(PLATFORM_FREERTOS)
 extern void vPortSetExtFree( void (*free)( void *p ), uint32_t upper, uint32_t lower );
-#else
+#elif defined(PLATFORM_CMSIS_RTOS)
 extern void rtw_set_mfree_ext( void (*free)( void *p ), uint32_t upper, uint32_t lower );
 #endif
 void tcm_heap_init(void)
