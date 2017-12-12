@@ -13,14 +13,32 @@
 
 #include "rtl8195a.h"
 //#include <stdarg.h>
-#include "rtl_consol.h"//#include "osdep_service.h"
-////#include "FreeRTOS.h"
-////#include "task.h"
-////#include "semphr.h"
-
+#include "rtl_consol.h"
+#if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
+#include "freertos_pmu.h"
+#endif
 #include "tcm_heap.h"
 
-struct task_struct RtlConsolTaskRam_task;
+#if defined(CONFIG_MBED_ENABLED)
+void UartLogIrqHandleRam(void * Data)
+{
+    printf("%s: Not Implemented Yet!\r\n");
+}
+#else
+// Those symbols will be defined in linker script for gcc compiler
+// If not doing this would cause extra memory cost
+#if defined (__GNUC__)
+
+    extern volatile UART_LOG_CTL    UartLogCtl;
+    extern volatile UART_LOG_CTL    *pUartLogCtl;
+    extern u8                       *ArgvArray[MAX_ARGV];
+    extern UART_LOG_BUF             UartLogBuf;
+
+#ifdef CONFIG_UART_LOG_HISTORY
+    extern u8  UartLogHistoryBuf[UART_LOG_HISTORY_LEN][UART_LOG_CMD_BUFLEN];
+#endif
+
+#else
 
 MON_RAM_BSS_SECTION
     volatile UART_LOG_CTL    UartLogCtl;
@@ -31,11 +49,17 @@ MON_RAM_BSS_SECTION
 MON_RAM_BSS_SECTION
     UART_LOG_BUF             UartLogBuf;
 
-
 #ifdef CONFIG_UART_LOG_HISTORY
 MON_RAM_BSS_SECTION
     u8  UartLogHistoryBuf[UART_LOG_HISTORY_LEN][UART_LOG_CMD_BUFLEN];
 #endif
+
+#endif
+
+#ifdef CONFIG_KERNEL
+static void (*up_sema_from_isr)(_sema *) = NULL;
+#endif
+
 
 _LONG_CALL_
 extern u8
@@ -67,6 +91,22 @@ UartLogCmdExecute(
     IN  PUART_LOG_CTL   pUartLogCtlExe
 );
 
+#if UART_LOG_CMD_BUFLEN != 127
+#if LOG_SERVICE_BUFLEN < UART_LOG_CMD_BUFLEN
+#error "Please check LOG_SERVICE_BUFLEN in platform_opts.h"
+#endif
+#include "rtl_consol_ram.h"
+volatile UART_LOG_CTL UartLogCtlRam;
+#define UartLogCtl UartLogCtlRam
+volatile UART_LOG_CTL *pUartLogCtlRam;
+#define pUartLogCtl pUartLogCtlRam
+UART_LOG_BUF UartLogBufRam;
+#define UartLogBuf UartLogBufRam
+#ifdef CONFIG_UART_LOG_HISTORY
+u8 UartLogHistoryBufRam[UART_LOG_HISTORY_LEN][UART_LOG_CMD_BUFLEN];
+#define UartLogHistoryBuf UartLogHistoryBufRam
+#endif
+#endif
 
 
 //=================================================
@@ -95,7 +135,8 @@ UartLogCmdExecute(
 #endif
 
 
-#if 0
+
+
 //======================================================
 //<Function>:  UartLogIrqHandleRam
 //<Usage   >:  To deal with Uart-Log RX IRQ
@@ -177,9 +218,9 @@ UartLogIrqHandleRam
                 {
                     pUartLogCtl->ExecuteCmd = _TRUE;
 #if defined(CONFIG_KERNEL) && !TASK_SCHEDULER_DISABLED
-    				if (pUartLogCtl->TaskRdy)
+    				if (pUartLogCtl->TaskRdy && up_sema_from_isr != NULL)
     					//RtlUpSemaFromISR((_Sema *)&pUartLogCtl->Sema);				
-						rtw_up_sema_from_isr((_sema *)&pUartLogCtl->Sema);
+						up_sema_from_isr((_sema *)&pUartLogCtl->Sema);
 #endif
                 }
                 else
@@ -241,7 +282,6 @@ RtlConsolInitRam(
         pUartLogCtl->TaskRdy = 0;
 #ifdef PLATFORM_FREERTOS
 #define	LOGUART_STACK_SIZE	128 //USE_MIN_STACK_SIZE modify from 512 to 128
-//if(rtw_create_task(&g_tcp_client_task, "tcp_client_handler", LOGUART_STACK_SIZE, TASK_PRORITY_MIDDLE, tcp_client_handler, 0) != _SUCCESS)
 #if CONFIG_USE_TCM_HEAP
 	{
 		int ret = 0;
@@ -282,8 +322,7 @@ RtlConsolInitRam(
 extern u8** GetArgv(const u8 *string);
 #if SUPPORT_LOG_SERVICE
 extern char log_buf[LOG_SERVICE_BUFLEN];
-//extern osSemaphore(log_rx_interrupt_sema);
-_sema log_rx_interrupt_sema;
+extern xSemaphoreHandle	log_rx_interrupt_sema;
 #endif
 //======================================================
 void console_cmd_exec(PUART_LOG_CTL   pUartLogCtlExe)
@@ -331,6 +370,7 @@ RtlConsolTaskRam(
     //4 Set this for UartLog check cmd history
 #ifdef CONFIG_KERNEL
 	pUartLogCtl->TaskRdy = 1;
+	up_sema_from_isr = rtw_up_sema_from_isr;
 #endif
 #ifndef CONFIG_KERNEL
     pUartLogCtl->BootRdy = 1;
@@ -350,16 +390,107 @@ RtlConsolTaskRam(
 }
 
 //======================================================
-extern void console_init_hs_uart(void);
-void console_init(void)
+#if BUFFERED_PRINTF
+xTaskHandle print_task = NULL;
+EventGroupHandle_t print_event = NULL;
+char print_buffer[MAX_PRINTF_BUF_LEN];
+int flush_idx = 0;
+int used_length = 0;
+
+int available_space(void)
 {
-	#if CONFIG_LOG_USE_HS_UART
-		sys_log_uart_off();
-        console_init_hs_uart();
-	#elif(CONFIG_LOG_USE_I2C)
-		sys_log_uart_off();
-		// TODO: 
-	#else
+    return MAX_PRINTF_BUF_LEN-used_length;
+}
+
+int buffered_printf(const char* fmt, ...)
+{
+    if((print_task==NULL) || (print_event==NULL) )
+        return 0;
+    char tmp_buffer[UART_LOG_CMD_BUFLEN+1];
+    static int print_idx = 0;
+    int cnt;
+    va_list arglist;
+
+    //if(xEventGroupGetBits(print_event)!=1)
+    //        xEventGroupSetBits(print_event, 1);
+
+    memset(tmp_buffer,0,UART_LOG_CMD_BUFLEN+1);
+    va_start(arglist, fmt);
+    rtl_vsnprintf(tmp_buffer, sizeof(tmp_buffer), fmt, arglist);
+    va_end(arglist);
+    cnt = _strlen(tmp_buffer);
+    taskENTER_CRITICAL();
+    if(cnt < available_space()){
+        if(print_idx >= flush_idx){
+            if(MAX_PRINTF_BUF_LEN-print_idx >= cnt){
+                memcpy(&print_buffer[print_idx], tmp_buffer, cnt);
+            }else{
+                memcpy(&print_buffer[print_idx], tmp_buffer, MAX_PRINTF_BUF_LEN-print_idx);
+                memcpy(&print_buffer[0], &tmp_buffer[MAX_PRINTF_BUF_LEN-print_idx], cnt-(MAX_PRINTF_BUF_LEN-print_idx));
+            }
+        }else{  // space is flush_idx - print_idx, and available space is enough
+            memcpy(&print_buffer[print_idx], tmp_buffer, cnt);
+        }
+        // protection needed
+        //taskENTER_CRITICAL();
+        used_length+=cnt;
+        //taskEXIT_CRITICAL();
+        print_idx+=cnt;
+        if(print_idx>=MAX_PRINTF_BUF_LEN)
+            print_idx -= MAX_PRINTF_BUF_LEN;
+    }else{
+        // skip
+        cnt = 0;
+    }
+    taskEXIT_CRITICAL();
+
+    if(xEventGroupGetBits(print_event)!=1)
+            xEventGroupSetBits(print_event, 1);
+
+    return cnt;
+}
+
+
+void printing_task(void* arg)
+{
+    while(1){
+        //wait event
+        if(xEventGroupWaitBits(print_event, 1,  pdFALSE, pdFALSE, 100 ) == 1){
+            while(used_length > 0){
+                DiagPutChar(print_buffer[flush_idx]);
+                taskENTER_CRITICAL();
+                flush_idx++;
+                if(flush_idx >= MAX_PRINTF_BUF_LEN)
+                    flush_idx-=MAX_PRINTF_BUF_LEN;
+                //taskENTER_CRITICAL();
+                used_length--;
+                taskEXIT_CRITICAL();
+            }
+            // clear event
+            xEventGroupClearBits( print_event, 1);
+        }
+    }
+}
+
+void rtl_printf_init()
+{
+    if(print_event==NULL){
+        print_event = xEventGroupCreate();
+        if(print_event == NULL)
+            printf("\n\rprint event init fail!\n");
+    }
+    if(print_task == NULL){
+        if(xTaskCreate(printing_task, (const char *)"print_task", 512, NULL, tskIDLE_PRIORITY + 1, &print_task) != pdPASS)
+            printf("\n\rprint task init fail!\n");
+    }
+}
+#endif
+//======================================================
+
+
+__weak void console_init(void)
+{
+
     IRQ_HANDLE          UartIrqHandle;
 
     //4 Register Log Uart Callback function
@@ -372,13 +503,17 @@ void console_init(void)
     //4 Register Isr handle
     InterruptUnRegister(&UartIrqHandle);
     InterruptRegister(&UartIrqHandle);
-	#endif
+        
+
 	
 #if !TASK_SCHEDULER_DISABLED
     RtlConsolInitRam((u32)RAM_STAGE,(u32)0,(VOID*)NULL);
 #else
     RtlConsolInitRam((u32)ROM_STAGE,(u32)0,(VOID*)NULL);
 #endif
-}
 
+#if BUFFERED_PRINTF
+    rtl_printf_init();
+#endif
+}
 #endif

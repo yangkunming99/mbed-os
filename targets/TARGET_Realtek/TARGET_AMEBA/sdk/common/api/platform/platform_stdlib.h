@@ -16,27 +16,31 @@
 #ifndef __PLATFORM_STDLIB_H__
 #define __PLATFORM_STDLIB_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define USE_CLIB_PATCH		0
 #if defined (__GNUC__)
 /* build rom should set USE_RTL_ROM_CLIB=0 */
-#ifndef CONFIG_MBED_ENABLED
+#if defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_MBED_ENABLED)
 #include <rt_lib_rom.h>
 #endif
 #endif
 
-#ifdef CONFIG_BUILD_ROM
+#if defined(CONFIG_BUILD_ROM) || defined(CONFIG_MBED_ENABLED)
 #define USE_RTL_ROM_CLIB	0
 #else
 #define BUFFERED_PRINTF         0
-#ifndef CONFIG_MBED_ENABLED
 #define USE_RTL_ROM_CLIB	1
-#else
-#define USE_RTL_ROM_CLIB	0
 #endif
+
+#if defined(CONFIG_PLATFORM_8195BHP)
+#define USE_RTL_ROM_CLIB	0
 #endif
 
 #if defined(CONFIG_PLATFORM_8195A)
-#if defined (__IARSTDLIB__)
+#if defined (__IARSTDLIB__) || (defined(CONFIG_MBED_ENABLED) && defined(__ICCARM__))
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -164,13 +168,15 @@
 //
 // memory management
 //
-#ifndef CONFIG_MBED_ENABLED
+#if defined(CONFIG_MBED_ENABLED)
+//use libc memory functions
+#else
 extern void *pvPortMalloc( size_t xWantedSize );
 extern void vPortFree( void *pv );
 #define malloc                  pvPortMalloc
 #define free                    vPortFree
 #endif
-#elif defined (CONFIG_PLATFORM_8711B)
+#elif (defined (CONFIG_PLATFORM_8711B) && !defined(CONFIG_PLATFORM_8721D))
 
 #if defined (__IARSTDLIB__)
 	#include <stdio.h>
@@ -234,7 +240,7 @@ extern void vPortFree( void *pv );
 	#define snprintf					DiagSnPrintf			// NULL function
 	#define vsnprintf(buf, size, fmt, ap)	VSprintf(buf, fmt, ap)
 #endif
-	#define memchr					__rtl_memchr_v1_00
+	#define memchr						__rtl_memchr_v1_00
 	#define memcmp(dst, src, sz)		_memcmp(dst, src, sz)
 	#define memcpy(dst, src, sz)		_memcpy(dst, src, sz)
 	#define memmove						__rtl_memmove_v1_00
@@ -260,6 +266,7 @@ extern void vPortFree( void *pv );
 	#undef sscanf
 	#define sscanf					_sscanf_patch
 	#define rand					Rand
+	#define srand				
 #endif
 	//extern int _sscanf_patch(const char *buf, const char *fmt, ...);
 	//#define sscanf					_sscanf_patch
@@ -279,8 +286,141 @@ extern void vPortFree( void *pv );
   #include <stdlib.h>
   #include <string.h>
   #include <stdint.h>
+
+#elif defined(CONFIG_PLATFORM_8195BHP)
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <diag.h>
+
+  #define printf                dbg_printf
+
+//
+// memory management
+//
+extern void *pvPortMalloc( size_t xWantedSize );
+extern void vPortFree( void *pv );
+#define malloc                  pvPortMalloc
+#define free                    vPortFree
+
 #endif
 
+#if defined (CONFIG_PLATFORM_8721D)
 
+#undef USE_RTL_ROM_CLIB
+
+#if defined (__IARSTDLIB__)
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <stdint.h>
+	#include <stdarg.h> /* va_list */
+	#include "diag.h"
+
+	#define strsep(str, delim)      	_strsep(str, delim)
+#else
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <stdarg.h> /* va_list */
+	#include "diag.h"
+	#include "strproc.h"
+	#include "memproc.h"
+	#include "basic_types.h"
+#if USE_RTL_ROM_CLIB
+	#include "rtl_lib.h"
+#endif
+
+	#undef printf
+	#undef sprintf
+	#undef snprintf
+	#undef memchr
+	#undef memcmp
+	#undef memcpy
+	#undef memset
+	#undef memmove
+	#undef strcmp
+	#undef strcpy
+	#undef strlen
+	#undef strncmp
+	#undef strncpy
+	#undef strsep
+	#undef strtok
+	#undef strcat
+	#undef strchr
+	#undef strncat
+	#undef strstr
+	#undef atol
+	#undef atoi
+	#undef strpbrk
+	#undef strtoul
+	#undef strtol
+	#undef sscanf
+	
+#if USE_RTL_ROM_CLIB
+#if BUFFERED_PRINTF
+        extern int buffered_printf(const char* fmt, ...);
+        #define printf				buffered_printf
+#else
+	#define printf				rtl_printf
+#endif
+	#define sprintf				rtl_sprintf
+	#define snprintf				rtl_snprintf
+	#define vsnprintf				rtl_vsnprintf
+#else
+	#define printf					DiagPrintf
+	#define sprintf(fmt, arg...)			DiagSPrintf((u8*)fmt, ##arg)
+	#define snprintf					DiagSnPrintf			// NULL function
+	#define vsnprintf(buf, size, fmt, ap)	DiagVSprintf(buf, fmt, ap)
+#endif
+	#define memchr					_memchr
+	#define memcmp(dst, src, sz)		_memcmp(dst, src, sz)
+	#define memcpy(dst, src, sz)		_memcpy(dst, src, sz)
+	#define memmove				_memmove
+	#define memset(dst, val, sz)		_memset(dst, val, sz)
+	
+	#define strchr(s, c)				_strchr(s, c)			// for B-cut ROM
+	#define strcmp(str1, str2)			_strcmp((const unsigned char *) str1, (const unsigned char *) str2)
+	#define strcpy(dest, src)			_strcpy(dest, src)
+	#define strlen(str)				_strlen((const unsigned char *) str)
+	#define strsep(str, delim)			_strsep(str, delim)
+	#define strstr(str1, str2)			_strstr(str1, str2)	// NULL function
+	#define strtok(str, delim)			_strtok(str, delim)//_strsep(str, delim)
+	#define strcat					_strcat
+	
+	#define strncmp(str1, str2, cnt)	_strncmp(str1, str2, cnt)
+	#define strncpy(dest, src, count)	_strncpy(dest, src, count)
+	#define strncat					_strncat
+
+	#define strtoul(str, endp, base)		_strtoul(str, endp, base)
+	#define strtol(str, endp, base)		_strtol(str, endp, base)
+
+	#define atol(str)					_strtol(str,NULL,10)
+	#define atoi(str)					_stratoi(str)	
+	#define strpbrk(cs, ct)			_strpbrk(cs, ct)		// for B-cut ROM
+	#define sscanf					_sscanf
+	#define rand						Rand
+	#define srand				
+
+	//extern int _sscanf_patch(const char *buf, const char *fmt, ...);
+	//#define sscanf					_sscanf_patch
+	
+
+#endif	// defined (__IARSTDLIB__)
+
+extern void *pvPortMalloc( size_t xWantedSize );
+extern void vPortFree( void *pv );
+#define malloc                  pvPortMalloc
+#define free                    vPortFree
+
+#endif //CONFIG_PLATFORM_8721D
+
+#if (CONFIG_PLATFORM_AMEBA_X == 0)
+#include "basic_types.h"
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif //__PLATFORM_STDLIB_H__
 

@@ -63,6 +63,7 @@ typedef signed long long        __int64_t;
 typedef unsigned long long      __uint64_t;
 #endif
 
+#if defined(CONFIG_MBED_ENABLED)
 typedef int8_t s8;
 typedef uint8_t u8;
 typedef int16_t s16;
@@ -71,17 +72,17 @@ typedef int32_t s32;
 typedef uint32_t u32;
 typedef int64_t s64;
 typedef uint64_t u64;
-
-#ifdef CONFIG_MBED_ENABLED
-#ifndef BOOL
-typedef unsigned int		   BOOL;
-#endif
-#ifndef __cplusplus
-#ifndef bool
-typedef unsigned char			bool;
-#endif
-#endif
 #else
+#define s8                      int8_t
+#define u8                      uint8_t
+#define s16                     int16_t
+#define u16                     uint16_t
+#define s32                     int32_t
+#define u32                     uint32_t
+#define s64                     int64_t
+#define u64                     uint64_t
+#endif
+
 #ifndef BOOL
 typedef unsigned char           BOOL;
 #endif
@@ -90,12 +91,17 @@ typedef unsigned char           BOOL;
 typedef unsigned char           bool;
 #endif
 #endif
-#endif
 
+#if defined(CONFIG_MBED_ENABLED)
 #define UCHAR                   uint8_t
 #define USHORT                  uint16_t
-//#define UINT                    uint32_t
+#define ULONG                   uint32_t
+#else
+#define UCHAR                   uint8_t
+#define USHORT                  uint16_t
+#define UINT                    uint32_t
 #define ULONG                   uint32_t	
+#endif
 
 typedef struct { volatile int counter; } atomic_t;
 
@@ -205,6 +211,7 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define ALIGNMTO(_bound) 	__attribute__ ((aligned (_bound)))
 
 #define _LONG_CALL_ROM_     _LONG_CALL_
+#define _WEAK           __attribute__ ((weak))
 
 #elif defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
 #define SECTION(_name) __attribute__ ((__section__(_name)))
@@ -526,11 +533,11 @@ typedef unsigned char	BOOLEAN,*PBOOLEAN;
 #define	__restrict			/* Ignore */
 #endif
 
-/* in rtl8195a_trap.h
+
 typedef struct _RAM_START_FUNCTION_ {
     VOID (*RamStartFun) (VOID);
 }RAM_START_FUNCTION, *PRAM_START_FUNCTION;
-*/
+
 
 typedef struct _RAM_FUNCTION_START_TABLE_ {
     VOID (*RamStartFun) (VOID);
