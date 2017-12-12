@@ -33,6 +33,32 @@ extern uint8_t Image$$RW_DRAM2$$ZI$$Limit[];
 #define __bss_dram_start__ Image$$RW_DRAM2$$ZI$$Base
 #define __bss_dram_end__   Image$$RW_DRAM2$$ZI$$Limit
 
+/* 
+* Below block is to remove the compilation error of ARMCC
+**/
+HAL_CUT_B_RAM_DATA_SECTION
+_WEAK unsigned int rand_x = 123456789;
+
+extern u8* rtw_malloc(u32 sz);
+extern void rtw_mfree(u8 *pbuf, u32 sz);
+_WEAK u8* RtlZmalloc(u32 sz)
+{
+    u8  *pbuf;
+ 
+    pbuf= rtw_malloc(sz);
+
+    if (pbuf != NULL) {
+        _memset(pbuf, 0, sz);
+    }
+
+    return pbuf;    
+}
+
+_WEAK void RtlMfree(u8 *pbuf, u32 sz)
+{
+    rtw_mfree(pbuf, sz);    
+}
+
 #elif defined (__ICCARM__)
 
 #pragma section=".bss.sram"

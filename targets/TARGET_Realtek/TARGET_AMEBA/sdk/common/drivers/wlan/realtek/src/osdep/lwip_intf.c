@@ -142,10 +142,10 @@ void rltk_wlan_recv(int idx, struct eth_drv_sg *sg_list, int sg_len)
 
 int netif_is_valid_IP(int idx, unsigned char *ip_dest)
 {
+#if CONFIG_LWIP_LAYER == 1
 #if defined(CONFIG_MBED_ENABLED)
     return 1;
 #else
-#if CONFIG_LWIP_LAYER == 1
     struct netif *pnetif = &xnetif[idx];
 
     ip_addr_t addr = { 0 };

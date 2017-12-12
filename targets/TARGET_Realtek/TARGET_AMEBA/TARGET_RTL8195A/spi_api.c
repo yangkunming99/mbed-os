@@ -336,7 +336,7 @@ void spi_bus_tx_done_callback(VOID *obj)
 
     if (spi_obj->bus_tx_done_handler) {
         handler = (spi_irq_handler)spi_obj->bus_tx_done_handler;
-        handler(spi_obj->bus_tx_done_irq_id, (SpiIrq)0);
+        handler(spi_obj->bus_tx_done_irq_id, 0);
     }    
 }
 
