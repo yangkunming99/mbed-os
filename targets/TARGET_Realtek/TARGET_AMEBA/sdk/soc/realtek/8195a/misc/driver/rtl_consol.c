@@ -22,7 +22,7 @@
 #if defined(CONFIG_MBED_ENABLED)
 void UartLogIrqHandleRam(void * Data)
 {
-    printf("%s: Not Implemented Yet!\r\n");
+    printf("%s: Should not come over here!\r\n");
 }
 #else
 // Those symbols will be defined in linker script for gcc compiler
