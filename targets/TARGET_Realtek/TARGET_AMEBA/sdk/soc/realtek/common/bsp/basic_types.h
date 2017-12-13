@@ -204,6 +204,7 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define _LONG_CALL_
 #define _LONG_CALL_ROM_  
 #define _WEAK          __weak
+
 #elif defined(__CC_ARM)
 // defined in rtl8195a_compiler.h
 #define SECTION(_name)      __attribute__ ((section(_name)))
@@ -533,11 +534,9 @@ typedef unsigned char	BOOLEAN,*PBOOLEAN;
 #define	__restrict			/* Ignore */
 #endif
 
-
 typedef struct _RAM_START_FUNCTION_ {
     VOID (*RamStartFun) (VOID);
 }RAM_START_FUNCTION, *PRAM_START_FUNCTION;
-
 
 typedef struct _RAM_FUNCTION_START_TABLE_ {
     VOID (*RamStartFun) (VOID);

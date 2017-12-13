@@ -1371,6 +1371,5 @@ struct osdep_service_ops {
 
 /*\@}*/
 
-
 #endif	//#ifndef __OSDEP_SERVICE_H_
 

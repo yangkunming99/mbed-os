@@ -36,6 +36,7 @@ extern "C" {
 #endif
 
 #if defined(CONFIG_PLATFORM_8195BHP)
+#undef USE_RTL_ROM_CLIB
 #define USE_RTL_ROM_CLIB	0
 #endif
 

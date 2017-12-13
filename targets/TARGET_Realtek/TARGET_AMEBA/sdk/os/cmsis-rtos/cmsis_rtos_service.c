@@ -1099,3 +1099,26 @@ const struct osdep_service_ops osdep_service = {
 	_rtx2_get_scheduler_state  // rtw_get_scheduler_state
 };
 
+/* 
+* Below block is to remove the compilation error of ARMCC
+**/
+HAL_CUT_B_RAM_DATA_SECTION
+_WEAK unsigned int rand_x = 123456789;
+
+_WEAK u8* RtlZmalloc(u32 sz)
+{
+    u8  *pbuf;
+
+    pbuf= rtw_malloc(sz);
+
+    if (pbuf != NULL) {
+        _memset(pbuf, 0, sz);
+    }
+
+    return pbuf;    
+}
+
+_WEAK void RtlMfree(u8 *pbuf, u32 sz)
+{
+    rtw_mfree(pbuf, sz);    
+}
