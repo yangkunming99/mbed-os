@@ -150,19 +150,11 @@
 
 
 //3 Store the Image 1 validate code
-#if defined (__CC_ARM)
-#define IMAGE1_VALID_PATTEN_SECTION                   \
-        SECTION(".image1.validate.rodata") __attribute__((used))
-
-#define IMAGE2_VALID_PATTEN_SECTION                   \
-        SECTION(".image2.validate.rodata") __attribute__((used))
-#else
 #define IMAGE1_VALID_PATTEN_SECTION                   \
         SECTION(".image1.validate.rodata")
 
 #define IMAGE2_VALID_PATTEN_SECTION                   \
         SECTION(".image2.validate.rodata")
-#endif
 
 
 //3 Infra Section
@@ -290,13 +282,8 @@
 //		SECTION(".ram.otg.data.b")
 #endif
 
-#if defined (__CC_ARM)
-#define IMAGE2_START_RAM_FUN_SECTION                     \
-            SECTION(".image2.ram.data") __attribute__((used))
-#else
 #define IMAGE2_START_RAM_FUN_SECTION                     \
             SECTION(".image2.ram.data")
-#endif
 
 #define SDRAM_DATA_SECTION                        \
         SECTION(".sdram.data")
