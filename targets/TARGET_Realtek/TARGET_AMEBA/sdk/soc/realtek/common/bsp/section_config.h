@@ -156,7 +156,6 @@
 #define IMAGE2_VALID_PATTEN_SECTION                   \
         SECTION(".image2.validate.rodata")
 
-
 //3 Infra Section
 #define INFRA_ROM_TEXT_SECTION                         \
         SECTION(".infra.rom.text")
