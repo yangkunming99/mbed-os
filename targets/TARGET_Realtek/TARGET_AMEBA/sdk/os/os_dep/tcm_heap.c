@@ -246,19 +246,10 @@ int tcm_heap_freeSpace(void)
  */
 void *tcm_heap_malloc(int size)
 {
-#if defined(PLATFORM_CMSIS_RTOS)
-	int64_t *mem;
-	// Make sure that block is 8-byte aligned
-	size = (size + 7U) & ~((uint32_t)7U);
-	size += sizeof(int64_t);
-	mem = (int64_t *)tcm_heap_allocmem(size);
-#else
 	int *mem;
+
 	size += sizeof(int);
-	mem = (int *)tcm_heap_allocmem(size);
-#endif
-
-
+	mem = (int*)tcm_heap_allocmem(size);
 	if (mem){
 		*mem++ = size;
 	}
@@ -294,11 +285,7 @@ void *tcm_heap_calloc(int size)
  */
 void tcm_heap_free(void *mem)
 {
-#if defined(PLATFORM_CMSIS_RTOS)
-	int64_t *_mem = (int64_t *)mem;
-#else
 	int *_mem = (int *)mem;
-#endif
 
 	if (_mem)
 	{
