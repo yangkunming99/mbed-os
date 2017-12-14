@@ -5,6 +5,10 @@
  ******************************************************************************/
 
 #include <osdep_service.h>
+#if CONFIG_USE_TCM_HEAP
+#include "tcm_heap.h"
+#endif
+
 #define OSDEP_DBG(x, ...) do {} while(0)
 
 extern struct osdep_service_ops osdep_service;
@@ -1062,7 +1066,7 @@ static void worker_thread_main( void *arg )
 			message.function(message.buf, message.buf_len, message.flags, message.user_data);
 			if(message.buf){
 				//printf("\n!!!!!Free %p(%d)\n", message.buf, message.buf_len);
-				_rtw_mfree(message.buf, message.buf_len);
+				_rtw_mfree((u8 *)message.buf, message.buf_len);
 			}
 		}
 	}

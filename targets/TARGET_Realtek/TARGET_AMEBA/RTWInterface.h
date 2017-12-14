@@ -35,7 +35,7 @@ public:
     /** RTWWlanInterface lifetime
      */
     RTWInterface(bool debug=false);
-    ~RTWInterface();
+    virtual ~RTWInterface();
 
     /** Set a static IP address
      *
