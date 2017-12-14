@@ -74,17 +74,13 @@ extern void PLAT_Start(void);
 extern void PLAT_Main(void);
 
 IMAGE2_START_RAM_FUN_SECTION
-#if defined (__CC_ARM)
-__attribute__((used)) 
-#endif
+__USED
 const RAM_START_FUNCTION gImage2EntryFun0 = {
     PLAT_Start
 };
 
 IMAGE2_VALID_PATTEN_SECTION
-#if defined (__CC_ARM)
-__attribute__((used)) 
-#endif
+__USED
 const uint8_t IMAGE2_SIGNATURE[20] = {
     'R', 'T', 'K', 'W', 'i', 'n', 0x0, 0xff,
     (FW_VERSION&0xff), ((FW_VERSION >> 8)&0xff),

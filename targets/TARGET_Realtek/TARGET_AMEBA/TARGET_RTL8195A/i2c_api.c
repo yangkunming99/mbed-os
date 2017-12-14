@@ -228,9 +228,9 @@ void i2c_frequency(i2c_t *obj, int hz)
 
 inline int i2c_start(i2c_t *obj)
 {
-    memset(address_save_int , 0, sizeof(address_save_int));
-    memset(Byte_count , 0, sizeof(Byte_count));
-    memset(address_save, 0, sizeof(address_save));
+    _memset(address_save_int , 0, sizeof(address_save_int));
+    _memset(Byte_count , 0, sizeof(Byte_count));
+    _memset(address_save, 0, sizeof(address_save));
     return 0;
 }
 
@@ -456,8 +456,7 @@ void i2c_slave_address(i2c_t *obj, int idx, uint32_t address, uint32_t mask)
     pSalI2CMngtAdpt         = &(obj->SalI2CMngtAdpt);
     pSalI2CHND              = &(pSalI2CMngtAdpt->pSalHndPriv->SalI2CHndPriv);
     address = (address & 0xFE ) >>1;
-    
-    uint16_t i2c_default_addr   = (uint16_t) pSalI2CHND->I2CAckAddr;
+
     uint16_t i2c_user_addr      = (uint16_t) address;
 
     if (i2c_target_addr[pSalI2CHND->DevNum] != i2c_user_addr) {

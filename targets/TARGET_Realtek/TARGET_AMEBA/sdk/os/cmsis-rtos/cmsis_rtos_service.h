@@ -7,11 +7,7 @@
 #include "wireless.h"
 #include "dlist.h"
 #include <cmsis_os2.h>
-//#include <rt_TypeDef.h>
 #include "RTX_Config.h"
-//#include <rt_Task.h>
-//#include <rt_Semaphore.h>
-//#include <rt_System.h>
 #include "rtx_lib.h"
 // --------------------------------------------
 //	Platform dependent include file
@@ -183,11 +179,10 @@ static __inline _list	*get_list_head(_queue	*queue)
 //#define container_of(p,t,n) (t*)((p)-&(((t*)0)->n))
 #define container_of(ptr, type, member) \
 			((type *)((char *)(ptr)-(SIZE_T)(&((type *)0)->member)))
-#define TASK_PRORITY_LOW  				osPriorityAboveNormal//osPriorityNormal
-#define TASK_PRORITY_MIDDLE   			osPriorityHigh//osPriorityAboveNormal
-#define TASK_PRORITY_HIGH    			osPriorityRealtime//osPriorityHigh
-#define TASK_PRORITY_SUPER    			osPriorityRealtime
-#define TASK_PRORITY_IDEL				osPriorityIdle
+#define TASK_PRORITY_LOW  				1
+#define TASK_PRORITY_MIDDLE   			2
+#define TASK_PRORITY_HIGH    			3
+#define TASK_PRORITY_SUPER    			4
 
 
 #define TIMER_MAX_DELAY    				0xFFFFFFFF
@@ -292,6 +287,5 @@ extern u32	rtw_is_list_empty(_list *phead);
 extern void	rtw_list_insert_head(_list *plist, _list *phead);
 extern void	rtw_list_insert_tail(_list *plist, _list *phead);
 extern void	rtw_list_delete(_list *plist);
-#define vPortExitCritical save_and_cli
 #endif /* _RTX_SERVICE_H_ */
 

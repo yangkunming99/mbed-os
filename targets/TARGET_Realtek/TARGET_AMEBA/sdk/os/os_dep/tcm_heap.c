@@ -249,7 +249,8 @@ void *tcm_heap_malloc(int size)
 	int *mem;
 
 	size += sizeof(int);
-	if ((mem = (int*)tcm_heap_allocmem(size))){
+	mem = (int*)tcm_heap_allocmem(size);
+	if (mem){
 		*mem++ = size;
 	}
 
@@ -262,8 +263,8 @@ void *tcm_heap_malloc(int size)
 void *tcm_heap_calloc(int size)
 {
 	void *mem;
-
-	if ((mem = tcm_heap_malloc(size)))
+	mem = tcm_heap_malloc(size);
+	if (mem)
 		memset(mem, 0, size);
 
 	return mem;
@@ -333,7 +334,7 @@ int tcm_heap_testRun(void)
 	alloc_test(ALLOC_SIZE2, TEST_LEN2);
 	/* Try to allocate the whole heap */
 	uint8_t *b = tcm_heap_allocmem(HEAP_SIZE);
-	int i, j;
+	int j;
 	//ASSERT(b);
 	//ASSERT(heap_freeSpace(&h) == 0);
 

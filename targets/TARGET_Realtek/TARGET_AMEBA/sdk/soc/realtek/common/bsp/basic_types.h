@@ -204,15 +204,20 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define _LONG_CALL_
 #define _LONG_CALL_ROM_  
 #define _WEAK          __weak
+#if (__VER__ >= 8000000)
+#define _USED __attribute__((used))
+#else
+#define _USED _Pragma("__root")
+#endif
 
 #elif defined(__CC_ARM)
 // defined in rtl8195a_compiler.h
 #define SECTION(_name)      __attribute__ ((section(_name)))
 #define _LONG_CALL_     	__attribute__ ((long_call))
 #define ALIGNMTO(_bound) 	__attribute__ ((aligned (_bound)))
-
 #define _LONG_CALL_ROM_     _LONG_CALL_
 #define _WEAK           __attribute__ ((weak))
+#define _USED __attribute__((used))
 
 #elif defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
 #define SECTION(_name) __attribute__ ((__section__(_name)))
@@ -230,6 +235,7 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define _LONG_CALL_ROM_     _LONG_CALL_
 #endif
 #define _WEAK           __attribute__ ((weak))
+#define _USED __attribute__((used))
 
 #else
 #define SECTION(_name) __attribute__ ((__section__(_name)))
@@ -247,6 +253,7 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define _LONG_CALL_ROM_     _LONG_CALL_
 #endif
 #define _WEAK           __attribute__ ((weak))
+#define _USED __attribute__((used))
 #endif
 
 
