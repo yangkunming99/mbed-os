@@ -58,6 +58,15 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
+    .TCM_overlay :
+    {
+        __bss_dtcm_start__ = .;
+        *lwip_mem*.o (.bss* COMMON)
+        *lwip_memp*.o (.bss* COMMON)
+        *(.tcm.heap*)
+        __bss_dtcm_end__ = .;
+    } > TCM
+    
     .image2.table :
     {
         KEEP(*(SORT(.image2.ram.data*)))
@@ -197,15 +206,6 @@ SECTIONS
     . = ORIGIN(SRAM1) + LENGTH(SRAM1) - StackSize;
         __HeapLimit = .;
     } > SRAM1
-    
-    .TCM_overlay :
-    {
-        __bss_dtcm_start__ = .;
-        *lwip_mem.o (.bss*)
-        *lwip_memp.o (.bss*)
-        *(.tcm.heap*)
-        __bss_dtcm_end__ = .;
-    } > TCM
     
     /* .stack_dummy section doesn't contains any symbols. It is only
      * used for linker to calculate size of stack sections, and assign
