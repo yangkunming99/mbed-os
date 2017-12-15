@@ -9,8 +9,6 @@
 #define USE_MUTEX_FOR_SPINLOCK 1
 #endif
 
-#define USE_HEAP_INFO	0
-
 #define OS_TICK        OS_TICK_FREQ
 #define OS_TICK_RATE_MS (1000/OS_TICK)
 
@@ -102,20 +100,13 @@ _func_exit_;
 }
 
 /********************* os depended service ********************/
-#if USE_HEAP_INFO
-static uint32_t osFreeBytesRemaining=0x400;
-#endif
+
 static void _rtx2_memset(void *pbuf, int c, u32 sz);
 u8* _rtx2_malloc(u32 sz)
 {
 _func_enter_;
     void *p = NULL;
     p = (void *)malloc(sz);
-    if(p != NULL){
-#if USE_HEAP_INFO
-        osFreeBytesRemaining-=sz;
-#endif
-    }
 _func_exit_;
     return p;
 }
@@ -126,9 +117,6 @@ _func_enter_;
     u8 *pbuf = _rtx2_malloc(sz);
 
     if (pbuf != NULL){
-#if USE_HEAP_INFO
-        osFreeBytesRemaining-=sz;
-#endif
         _rtx2_memset(pbuf, 0, sz);
     }
 _func_exit_;
@@ -154,9 +142,6 @@ _func_enter_;
     }else{
         free(pbuf);
     }
-#if USE_HEAP_INFO
-    osFreeBytesRemaining+=sz;
-#endif
 }
 
 static void _rtx2_memcpy(void* dst, void* src, u32 sz)
@@ -751,11 +736,8 @@ _func_exit_;
 
 static u32 _rtx2_GetFreeHeapSize(void)
 {
-#if USE_HEAP_INFO
-    return osFreeBytesRemaining;
-#else
+    //TODO
     return 0;
-#endif
 }
 
 /* Convert from wlan priority number to CMSIS type osPriority */
@@ -774,14 +756,18 @@ static int _rtx2_create_task(struct task_struct *ptask, const char *name,
 _func_enter_;
     rtx_thread_data_t *thread_hdl = NULL;
     u32 stacksize = stack_size * 4; //sizeof(DWORD)
+    u8 *(*_customized_malloc)( u32 size ) = _rtx2_malloc;
+    u8 *(*_customized_zmalloc)( u32 size ) = _rtx2_zmalloc;
     if(!func)
         goto err_exit;
 #if defined(CONFIG_WIFI_NORMAL) && defined(CONFIG_NETWORK)
     if(rtw_if_wifi_thread((char *)name) == 0){
         priority = make_cmsis_priority(priority);
+        _customized_malloc = _rtw_vmalloc;
+        _customized_zmalloc = _rtw_zvmalloc;
     }
 #endif
-    thread_hdl = (rtx_thread_data_t *)_rtx2_zmalloc(sizeof(rtx_thread_data_t));
+    thread_hdl = (rtx_thread_data_t *)_customized_zmalloc(sizeof(rtx_thread_data_t));
     if(thread_hdl == NULL)
         goto err_exit;
     if(priority > osPriorityRealtime){
@@ -793,9 +779,12 @@ _func_enter_;
     thread_hdl->attr.cb_size = sizeof(thread_hdl->data);
     thread_hdl->attr.cb_mem = &thread_hdl->data;
     thread_hdl->attr.stack_size = stacksize;
-    thread_hdl->attr.stack_mem = (void *)_rtx2_malloc(stacksize); 
-    if (thread_hdl->attr.stack_mem == NULL)
+    thread_hdl->attr.stack_mem = (void *)_customized_malloc(stacksize); 
+    if (thread_hdl->attr.stack_mem == NULL) {
+        DBG_ERR("[%s] malloc failed", name);
         goto err_exit;
+    }
+
 
     ptask->task = (_thread_hdl_)thread_hdl;
     ptask->task_name = name;
@@ -807,8 +796,10 @@ _func_enter_;
     //rtw_init_queue(&wq->work_queue);
 
     thread_hdl->id = osThreadNew((osThreadFunc_t)func, thctx, &thread_hdl->attr);
-    if(thread_hdl->id == NULL)
+    if (thread_hdl->id == NULL) {
+        DBG_ERR("[%s] osThreadNew failed", name);
         goto err_exit;
+    }
     return _SUCCESS;
 err_exit:
     if(thread_hdl){
@@ -819,7 +810,7 @@ err_exit:
             _rtx2_mfree((void *)thread_hdl->attr.stack_mem, thread_hdl->attr.stack_size);
         _rtx2_mfree((u8 *)thread_hdl, sizeof(rtx_thread_data_t));
     }
-    DBG_ERR("Create Task \"%s\" Failed! \n", ptask->task_name);
+    DBG_ERR("Create Task \"%s\" Failed! \n", name);
     return _FAIL;
 }
 
@@ -985,6 +976,74 @@ _func_exit_;
     return _FAIL;
 }
 
+void *_rtx2_timerGetID( _timerHandle xTimer ){
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return NULL;
+}
+
+u32  _rtx2_timerStart( _timerHandle xTimer, 
+							   osdepTickType xBlockTime )
+{
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;	
+}
+
+u32  _rtx2_timerStartFromISR( _timerHandle xTimer, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;	
+}
+
+u32  _rtx2_timerStopFromISR( _timerHandle xTimer, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;	
+}
+
+u32  _rtx2_timerResetFromISR( _timerHandle xTimer, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;	
+}
+
+u32  _rtx2_timerChangePeriodFromISR( _timerHandle xTimer, 
+							   osdepTickType xNewPeriod, 
+							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+{
+	if(xNewPeriod == 0)
+		xNewPeriod += 1;
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;	
+}
+
+u32  _rtx2_timerReset( _timerHandle xTimer, 
+							   osdepTickType xBlockTime )
+{
+    DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
+    return _FAIL;		
+}
+
+void _rtx2_acquire_wakelock()
+{
+    //TODO
+    return;	
+}
+
+void _rtx2_release_wakelock()
+{
+    //TODO
+    return;
+}
+
+void _rtx2_wakelock_timeout(uint32_t timeout)
+{
+    //TODO
+    return;
+}
+
 u8 _rtx2_get_scheduler_state(void)
 {
 _func_enter_;
@@ -1080,17 +1139,17 @@ const struct osdep_service_ops osdep_service = {
     _rtx2_timerIsTimerActive,    //rtw_timerIsTimerActive,
     _rtx2_timerStop,             //rtw_timerStop,         
     _rtx2_timerChangePeriod,      //rtw_timerChangePeriod  
-    NULL,			//rtw_timerGetID
-    NULL,			//rtw_timerStart
-    NULL,	//rtw_timerStartFromISR
-    NULL,		//rtw_timerStopFromISR
-    NULL,	//rtw_timerResetFromISR
-    NULL,	//rtw_timerChangePeriodFromISR
-    NULL,			//rtw_timerReset
+    _rtx2_timerGetID,			//rtw_timerGetID
+    _rtx2_timerStart,			//rtw_timerStart
+    _rtx2_timerStartFromISR,	//rtw_timerStartFromISR
+    _rtx2_timerStopFromISR,		//rtw_timerStopFromISR
+    _rtx2_timerResetFromISR,	//rtw_timerResetFromISR
+    _rtx2_timerChangePeriodFromISR,	//rtw_timerChangePeriodFromISR
+    _rtx2_timerReset,			//rtw_timerReset
 
-    NULL,  // rtw_acquire_wakelock
-    NULL,  // rtw_release_wakelock
-    NULL,  //rtw_wakelock_timeout
+    _rtx2_acquire_wakelock,		//rtw_acquire_wakelock
+    _rtx2_release_wakelock,		//rtw_release_wakelock
+    _rtx2_wakelock_timeout,		//rtw_wakelock_timeout
     _rtx2_get_scheduler_state  // rtw_get_scheduler_state
 };
 
