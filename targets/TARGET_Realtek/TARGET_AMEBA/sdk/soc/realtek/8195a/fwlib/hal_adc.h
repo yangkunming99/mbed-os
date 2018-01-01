@@ -45,7 +45,8 @@ enum _ADC_DBG_LVL_ {
 typedef uint32_t ADC_DBG_LVL;
 typedef uint32_t * PADC_DBG_LVL;
 
-#if defined (CONFIG_DEBUG_LOG) && defined (CONFIG_DEBUG_LOG_ADC_HAL)
+#ifdef CONFIG_DEBUG_LOG
+#ifdef CONFIG_DEBUG_LOG_ADC_HAL
 
     #define DBG_8195A_ADC(...)  do{ \
         _DbgDump("\r"ADC_PREFIX __VA_ARGS__);\
@@ -62,6 +63,7 @@ typedef uint32_t * PADC_DBG_LVL;
     #define DBG_ADC_LOG_PERD    100
     #define DBG_8195A_ADC(...)
     #define DBG_8195A_ADC_LVL(...)
+#endif
 #endif
 
 
