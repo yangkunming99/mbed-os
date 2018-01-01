@@ -43,7 +43,8 @@ enum _DAC_DBG_LVL_ {
 typedef uint32_t DAC_DBG_LVL;
 typedef uint32_t * PDAC_DBG_LVL;
 
-#if defined(CONFIG_DEBUG_LOG) && defined(CONFIG_DEBUG_LOG_DAC_HAL)
+#ifdef CONFIG_DEBUG_LOG
+#ifdef CONFIG_DEBUG_LOG_DAC_HAL
 
     #define DBG_8195A_DAC(...)  do{ \
         _DbgDump("\r"DAC_PREFIX __VA_ARGS__);\
@@ -60,6 +61,7 @@ typedef uint32_t * PDAC_DBG_LVL;
     #define DBG_DAC_LOG_PERD    100
     #define DBG_8195A_DAC(...)
     #define DBG_8195A_DAC_LVL(...)
+#endif
 #endif
 
 

@@ -251,13 +251,14 @@ void *tcm_heap_malloc(int size)
 	// Make sure that block is 8-byte aligned
 	size = (size + 7U) & ~((uint32_t)7U);
 	size += sizeof(int64_t);
+	mem = (int64_t *)tcm_heap_allocmem(size);
 #else
 	int *mem;
-
 	size += sizeof(int);
+	mem = (int *)tcm_heap_allocmem(size);
 #endif
 
-	mem = (int*)tcm_heap_allocmem(size);
+
 	if (mem){
 		*mem++ = size;
 	}

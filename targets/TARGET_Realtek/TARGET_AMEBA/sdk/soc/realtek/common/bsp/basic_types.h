@@ -92,11 +92,7 @@ typedef unsigned char           bool;
 #endif
 #endif
 
-#if defined(CONFIG_MBED_ENABLED)
-#define UCHAR                   uint8_t
-#define USHORT                  uint16_t
-#define ULONG                   uint32_t
-#else
+#if !defined(CONFIG_MBED_ENABLED)
 #define UCHAR                   uint8_t
 #define USHORT                  uint16_t
 #define UINT                    uint32_t
