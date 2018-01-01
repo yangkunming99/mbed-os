@@ -28,13 +28,13 @@ extern int rtw_if_wifi_thread(char *name);
 //-----------------------------------------------------------------------
 int osdep_print = 0;
 #define _func_enter_ do{\
-						if(osdep_print)\
-							printf("enter %s\r\n", __FUNCTION__);\
-					}while(0)
+                        if(osdep_print)\
+                            printf("enter %s\r\n", __FUNCTION__);\
+                    }while(0)
 #define _func_exit_ do{\
-						if(osdep_print)\
-							printf("exit %s\r\n", __FUNCTION__);\
-				     }while(0)
+                        if(osdep_print)\
+                            printf("exit %s\r\n", __FUNCTION__);\
+                    }while(0)
 
 void save_and_cli()
 {
@@ -213,7 +213,7 @@ _func_enter_;
     if(*sema){
         rtx_sema_t *p_sem = (rtx_sema_t *)(*sema);
         osStatus_t status = osSemaphoreRelease(p_sem->id);
-        if ( status != osOK){
+        if (status != osOK){
             DBG_ERR("error %d", status);
         }
     }else
@@ -785,7 +785,6 @@ _func_enter_;
         goto err_exit;
     }
 
-
     ptask->task = (_thread_hdl_)thread_hdl;
     ptask->task_name = name;
     ptask->blocked = 0;
@@ -886,10 +885,10 @@ typedef struct os_timer_cb_ {                   // Timer Control Block
 } os_timer_cb;
 *****************************************************/
 _timerHandle _rtx2_timerCreate( const signed char *pcTimerName, 
-							  osdepTickType xTimerPeriodInTicks, 
-							  u32 uxAutoReload, 
-							  void * pvTimerID, 
-							  TIMER_FUN pxCallbackFunction )
+                                osdepTickType xTimerPeriodInTicks, 
+                                u32 uxAutoReload, 
+                                void * pvTimerID, 
+                                TIMER_FUN pxCallbackFunction )
 {
 _func_enter_;
     rtx_tmr_t *tmr = (rtx_tmr_t *)_rtx2_zmalloc(sizeof(rtx_tmr_t));
@@ -916,7 +915,7 @@ err_exit:
 }
 
 u32 _rtx2_timerDelete( _timerHandle xTimer, 
-							   osdepTickType xBlockTime )
+                        osdepTickType xBlockTime )
 {
 _func_enter_;
     rtx_tmr_t *tmr = (rtx_tmr_t *) xTimer;
@@ -940,7 +939,7 @@ _func_enter_;
 }
 
 u32  _rtx2_timerStop( _timerHandle xTimer, 
-							   osdepTickType xBlockTime )
+                        osdepTickType xBlockTime )
 {
 _func_enter_;
     rtx_tmr_t *tmr = (rtx_tmr_t *) xTimer;
@@ -957,8 +956,8 @@ _func_exit_;
 }
 
 u32  _rtx2_timerChangePeriod( _timerHandle xTimer, 
-							   osdepTickType xNewPeriod, 
-							   osdepTickType xBlockTime )
+                                osdepTickType xNewPeriod, 
+                                osdepTickType xBlockTime )
 {
 _func_enter_;
     rtx_tmr_t *tmr = (rtx_tmr_t *) xTimer;
@@ -982,54 +981,54 @@ void *_rtx2_timerGetID( _timerHandle xTimer ){
 }
 
 u32  _rtx2_timerStart( _timerHandle xTimer, 
-							   osdepTickType xBlockTime )
+                        osdepTickType xBlockTime )
 {
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;	
+    return _FAIL;
 }
 
 u32  _rtx2_timerStartFromISR( _timerHandle xTimer, 
-							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+                                osdepBASE_TYPE *pxHigherPriorityTaskWoken )
 {
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;	
+    return _FAIL;
 }
 
 u32  _rtx2_timerStopFromISR( _timerHandle xTimer, 
-							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+                                osdepBASE_TYPE *pxHigherPriorityTaskWoken )
 {
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;	
+    return _FAIL;
 }
 
 u32  _rtx2_timerResetFromISR( _timerHandle xTimer, 
-							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+                                osdepBASE_TYPE *pxHigherPriorityTaskWoken )
 {
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;	
+    return _FAIL;
 }
 
 u32  _rtx2_timerChangePeriodFromISR( _timerHandle xTimer, 
-							   osdepTickType xNewPeriod, 
-							   osdepBASE_TYPE *pxHigherPriorityTaskWoken )
+                                    osdepTickType xNewPeriod, 
+                                    osdepBASE_TYPE *pxHigherPriorityTaskWoken )
 {
-	if(xNewPeriod == 0)
-		xNewPeriod += 1;
+    if(xNewPeriod == 0)
+        xNewPeriod += 1;
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;	
+    return _FAIL;
 }
 
 u32  _rtx2_timerReset( _timerHandle xTimer, 
-							   osdepTickType xBlockTime )
+                        osdepTickType xBlockTime )
 {
     DBG_ERR("%s: Not implemented yet\n", __FUNCTION__);
-    return _FAIL;		
+    return _FAIL;
 }
 
 void _rtx2_acquire_wakelock()
 {
     //TODO
-    return;	
+    return;
 }
 
 void _rtx2_release_wakelock()
@@ -1056,7 +1055,7 @@ _func_enter_;
         case osKernelSuspended:
             state_out = OS_SCHEDULER_SUSPENDED;
             break;
-        default:	
+        default:
             break;
     }
 _func_exit_;
@@ -1169,10 +1168,16 @@ _WEAK u8* RtlZmalloc(u32 sz)
         _memset(pbuf, 0, sz);
     }
 
-    return pbuf;    
+    return pbuf;
 }
 
 _WEAK void RtlMfree(u8 *pbuf, u32 sz)
 {
-    rtw_mfree(pbuf, sz);    
+    rtw_mfree(pbuf, sz);
 }
+
+_WEAK void UartLogIrqHandleRam(void * Data)
+{
+    printf("%s: Should not come over here!\r\n", __func__);
+}
+
