@@ -78,3 +78,14 @@ cscope.*
 
 # Visual Studio Code
 .vscode/
+mbed-os.PS
+mbed-os.IAB
+mbed-os.IAD
+mbed-os.IMD
+mbed-os.IMB
+mbed-os.PFI
+mbed-os.PO
+mbed-os.PR
+mbed-os.PRI
+mbed-os.SearchResults
+mbed-os.WK3

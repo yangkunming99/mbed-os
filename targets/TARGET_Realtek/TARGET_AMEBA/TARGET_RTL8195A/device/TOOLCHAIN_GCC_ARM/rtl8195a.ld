@@ -58,7 +58,6 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
-    __ram_start_table_start__ = 0x10000bc8;
     .TCM_overlay :
     {
         __bss_dtcm_start__ = .;
