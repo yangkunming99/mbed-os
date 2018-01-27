@@ -90,7 +90,7 @@ RTWInterface::RTWInterface(bool debug)
 {
     emac_interface_t *emac;
     int ret;
-    extern u32 GlobalDebugEnable;
+    extern __u32 GlobalDebugEnable;
 
     GlobalDebugEnable = debug?1:0;
     emac = wlan_emac_init_interface();
