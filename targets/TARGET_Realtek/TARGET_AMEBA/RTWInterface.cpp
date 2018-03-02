@@ -90,7 +90,6 @@ RTWInterface::RTWInterface(bool debug)
 {
     emac_interface_t *emac;
     int ret;
-    extern __u32 GlobalDebugEnable;
 
     GlobalDebugEnable = debug?1:0;
     emac = wlan_emac_init_interface();
@@ -305,4 +304,5 @@ const char *RTWInterface::get_gateway()
 
 NetworkStack *RTWInterface::get_stack()
 {
+    return nsapi_create_stack(&lwip_stack);
 }
