@@ -47,7 +47,7 @@
 
 
 #if defined(CONFIG_HARDWARE_8188F) || defined(CONFIG_HARDWARE_8192E)|| defined(CONFIG_HARDWARE_8723D)
-#define DM_ODM_SUPPORT_TYPE ODM_CE
+#define CONFIG_FW_C2H_PKT
 #define PHYDM_LINUX_CODING_STYLE 1
 #else
 #define PHYDM_LINUX_CODING_STYLE 0
@@ -131,10 +131,6 @@
 #endif
 
 #if defined(CONFIG_PLATFORM_8711B)
-	#define CONFIG_FW_C2H_PKT
-#endif
-
-#if defined(CONFIG_HARDWARE_8192E)
 	#define CONFIG_FW_C2H_PKT
 #endif
 

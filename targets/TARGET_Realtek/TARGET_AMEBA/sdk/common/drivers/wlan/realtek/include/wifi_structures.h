@@ -229,6 +229,20 @@ typedef struct rtw_rx_info {
 	uint8_t filter;		// 2: 2T rate pkt; 3: LDPC pkt
 	signed char rssi;	//-128~-1
 }rtw_rx_info_t;
+
+struct rtw_plcp_info {
+	struct rtw_plcp_info *prev;
+	struct rtw_plcp_info *next;
+	uint16_t length;	//length without FCS
+	uint8_t filter;		// 1: HT-20 pkt; 2: HT-40 and not LDPC pkt; 3: LDPC pkt
+	signed char rssi;	//-128~-1
+};
+
+struct rtw_rx_buffer {
+	struct rtw_plcp_info *head;
+	struct rtw_plcp_info *tail;
+};
+
 #endif
 
 typedef struct {

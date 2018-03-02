@@ -1,10 +1,10 @@
-#ifndef _RTX2_SERVICE_H_
-#define _RTX2_SERVICE_H_
+#ifndef _CMSIS_RTOS_SERVICE_H_
+#define _CMSIS_RTOS_SERVICE_H_
 
 //-----------------------------------------------------------------------
 // Include Files
 //-----------------------------------------------------------------------
-#include "wireless.h"
+//#include "wireless.h"
 #include "dlist.h"
 #include <cmsis_os2.h>
 #include "RTX_Config.h"
@@ -12,10 +12,22 @@
 // --------------------------------------------
 //	Platform dependent include file
 // --------------------------------------------
-#if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8711B)
-//#include "platform_stdlib.h"
-//#include "basic_types.h"
-#include <rtl8195a.h>
+#if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP)
+#include "platform/platform_stdlib.h"
+extern VOID RtlUdelayOS(u32 us);
+#elif defined(CONFIG_PLATFORM_8711B)
+#include "platform/platform_stdlib.h"
+#elif defined(CONFIG_PLATFORM_8721D)
+#include "platform/platform_stdlib.h"
+#elif defined(CONFIG_HARDWARE_8821C)
+#include "basic_types.h"
+#include "wlan_basic_types.h"
+#elif defined(CONFIG_HARDWARE_8188F)
+#include "platform/platform_stdlib.h"
+#elif defined(CONFIG_HARDWARE_8192E)
+#include "platform/platform_stdlib.h"
+#elif defined(CONFIG_HARDWARE_8723D)
+#include "platform/platform_stdlib.h"
 #else
 // other MCU may use standard library 
 #include <string.h>
@@ -24,7 +36,7 @@
 
 #if (defined CONFIG_GSPI_HCI || defined CONFIG_SDIO_HCI) || defined(CONFIG_LX_HCI)
 /* For SPI interface transfer and us delay implementation */
-#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B)
+#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B) && !defined(CONFIG_PLATFORM_8721D)  && !defined(CONFIG_PLATFORM_8195BHP)
 #include <rtwlan_bsp.h>	
 #endif
 #endif
@@ -33,39 +45,8 @@
 // --------------------------------------------
 //	Platform dependent type define
 // --------------------------------------------
-#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B)
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned int		u32;
-typedef signed char			s8;
-typedef signed short		s16;
-typedef signed int			s32;
-typedef signed long long 	s64;
-typedef unsigned long long	u64;
-typedef unsigned int		uint;
-typedef signed int			sint;
-
-#ifndef bool
-typedef int				bool;
-#define  true				1
-#define  false				0
-#endif
-
-#define IN
-#define OUT
-#define VOID void
-#define NDIS_OID uint
-#define NDIS_STATUS uint
-#ifndef	PVOID
-typedef void *		PVOID;
-#endif
-
-typedef unsigned int		__kernel_size_t;
-typedef int			__kernel_ssize_t;
-typedef	__kernel_size_t		SIZE_T;	
-typedef	__kernel_ssize_t	SSIZE_T;
-
-#endif //CONFIG_PLATFORM_8195A
+#define OS_TICK        OS_TICK_FREQ
+#define OS_TICK_RATE_MS (1000/OS_TICK)
 
 // === SEMAPHORE ===
 typedef struct {
@@ -136,6 +117,7 @@ typedef struct timer_list	_timer;
 
 typedef	struct sk_buff		_pkt;
 typedef unsigned char		_buffer;
+typedef unsigned int        systime;
 
 #ifndef __LIST_H
 #warning "DLIST_NOT_DEFINE!!!!!!"
@@ -156,6 +138,8 @@ typedef unsigned long		_irqL;
 typedef void*			_thread_hdl_;
 typedef void			thread_return;
 typedef void*			thread_context;
+
+typedef struct { volatile int counter; } atomic_t;
 
 #define ATOMIC_T atomic_t
 #define HZ configTICK_RATE_HZ
@@ -184,12 +168,19 @@ static __inline _list	*get_list_head(_queue	*queue)
 #define TASK_PRORITY_HIGH              3
 #define TASK_PRORITY_SUPER             4
 
-
 #define TIMER_MAX_DELAY    				0xFFFFFFFF
+
 void save_and_cli(void);
 void restore_flags(void);
 void cli(void);
 
+#ifndef mdelay
+#define mdelay(t)					((t/OS_TICK_RATE_MS)>0)?(osDelay(t/OS_TICK_RATE_MS)):(osDelay(1))
+#endif
+
+#ifndef udelay
+#define udelay(t)					((t/(OS_TICK_RATE_MS*1000))>0)?osDelay(t/(OS_TICK_RATE_MS*1000)):(osDelay(1))
+#endif
 //----- ------------------------------------------------------------------
 // Common Definition
 //----- ------------------------------------------------------------------
@@ -203,6 +194,7 @@ void cli(void);
 #define KERN_INFO
 #define KERN_NOTICE
 
+#undef GFP_KERNEL
 #define GFP_KERNEL			1
 #define GFP_ATOMIC			1
 
@@ -223,10 +215,11 @@ void cli(void);
 #define DBG_INFO(fmt, args...)
 #endif
 #define HALT()				do { cli(); for(;;);} while(0)
+#undef ASSERT
 #define ASSERT(x)			do { \
-						if((x) == 0) \
+						if((x) == 0){\
 							printf("\n\rAssert(" #x ") failed on line %d in file %s", __LINE__, __FILE__); \
-						HALT(); \
+						HALT();}\
 					} while(0)
 
 #undef DBG_ASSERT
@@ -238,10 +231,6 @@ void cli(void);
 //----- ------------------------------------------------------------------
 // Atomic Operation
 //----- ------------------------------------------------------------------
-#if !defined(CONFIG_PLATFORM_8195A) && !defined(CONFIG_PLATFORM_8711B)	// for 8195A, it is defined in ..system../basic_types.h
-typedef struct { volatile int counter; } atomic_t;
-#endif
-
 
 /*
  * atomic_read - read atomic variable
@@ -250,6 +239,7 @@ typedef struct { volatile int counter; } atomic_t;
  * Atomically reads the value of @v.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
  */
+#undef atomic_read
 #define atomic_read(v)  ((v)->counter)
 
 /*
@@ -260,6 +250,7 @@ typedef struct { volatile int counter; } atomic_t;
  * Atomically sets the value of @v to @i.  Note that the guaranteed
  * useful range of an atomic_t is only 24 bits.
  */
+#undef atomic_set
 #define atomic_set(v,i) ((v)->counter = (i))
 
  /*
@@ -287,5 +278,10 @@ extern u32	rtw_is_list_empty(_list *phead);
 extern void	rtw_list_insert_head(_list *plist, _list *phead);
 extern void	rtw_list_insert_tail(_list *plist, _list *phead);
 extern void	rtw_list_delete(_list *plist);
-#endif /* _RTX_SERVICE_H_ */
+
+#if (defined CONFIG_PLATFORM_8711B) || (defined CONFIG_PLATFORM_8721D)
+extern u32 random_seed;
+#endif
+
+#endif /* _CMSIS_RTOS_SERVICE_H_ */
 

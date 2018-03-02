@@ -99,8 +99,6 @@ typedef unsigned char           bool;
 #define ULONG                   uint32_t	
 #endif
 
-typedef struct { volatile int counter; } atomic_t;
-
 enum _RTK_STATUS_ {
     _EXIT_SUCCESS = 0,
     _EXIT_FAILURE = 1

@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 #if defined(CONFIG_PLATFORM_8195A)
-#if defined (__IARSTDLIB__) || (defined(CONFIG_MBED_ENABLED) && defined(__ICCARM__))
+#if defined (__IARSTDLIB__)
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -55,6 +55,13 @@ extern "C" {
 	#include <string.h>
 	#include <stdint.h>
 	#include "diag.h"
+	#define strsep(str, delim)      	_strsep(str, delim)
+#elif defined (CONFIG_MBED_ENABLED)
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include "diag.h"
+
 	#define strsep(str, delim)      	_strsep(str, delim)
 #else
 	#include <stdio.h>
@@ -289,6 +296,7 @@ extern void vPortFree( void *pv );
   #include <stdint.h>
 
 #elif defined(CONFIG_PLATFORM_8195BHP)
+#if 0
   #include <stdio.h>
   #include <stdlib.h>
   #include <string.h>
@@ -303,7 +311,7 @@ extern void *pvPortMalloc( size_t xWantedSize );
 extern void vPortFree( void *pv );
 #define malloc                  pvPortMalloc
 #define free                    vPortFree
-
+#endif
 #endif
 
 #if defined (CONFIG_PLATFORM_8721D)

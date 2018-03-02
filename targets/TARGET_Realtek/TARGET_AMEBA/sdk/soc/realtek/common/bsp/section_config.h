@@ -14,8 +14,8 @@
 #ifndef _SECTION_CONFIG_H_
 #define _SECTION_CONFIG_H_
 
-#include "platform_autoconf.h"
 #include "basic_types.h"
+#include "platform_autoconf.h"
 
 #define RAM_DEDECATED_VECTOR_TABLE_SECTION          \
         SECTION(".ram_dedecated_vector_table")

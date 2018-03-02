@@ -649,6 +649,15 @@ Set the network mode according to the data rate its supported.
 int wifi_set_network_mode(rtw_network_mode_t mode);
 
 /**
+ * @brief	Get the network mode. 
+ *			Driver works in BGN mode in default after driver initialization. This function is used to
+ *			get the current wireless network mode for station mode.
+ * @param[in]  pmode: Network mode to get.
+ * @return  RTW_SUCCESS or RTW_ERROR.
+ */
+int wifi_get_network_mode(rtw_network_mode_t *pmode);
+
+/**
  * @brief  Set the chip to start or stop the promiscuous mode.
  * @param[in]  enabled: enabled can be set 0, 1, 2, 3 and 4. if enabled is zero, disable the promisc, else enable the promisc.
  *                    - 0 means disable the promisc.

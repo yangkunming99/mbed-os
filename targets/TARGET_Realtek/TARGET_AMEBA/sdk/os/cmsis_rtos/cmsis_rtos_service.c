@@ -9,8 +9,6 @@
 #define USE_MUTEX_FOR_SPINLOCK 1
 #endif
 
-#define OS_TICK        OS_TICK_FREQ
-#define OS_TICK_RATE_MS (1000/OS_TICK)
 
 //-----------------------------------------------------------------------
 // Private Variables
@@ -1061,6 +1059,7 @@ _func_enter_;
 _func_exit_;
     return state_out;
 }
+
 
 const struct osdep_service_ops osdep_service = {
     _rtx2_malloc,		//rtw_vmalloc
